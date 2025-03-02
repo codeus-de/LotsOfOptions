@@ -1,8 +1,11 @@
 from flask import Flask, render_template, jsonify, request
-import yfinance as yf
+from yahooquery import Ticker
 import os
+import logging
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.INFO)
 
 @app.route('/')
 def index():
@@ -12,70 +15,75 @@ def index():
 @app.route('/api/stock-data')
 def get_stock_data():
     """API endpoint to fetch stock data."""
-    ticker = request.args.get('ticker', 'AAPL')
+    ticker_symbol = request.args.get('ticker', 'AAPL')
     
     try:
-        # Get stock data using yfinance
-        stock = yf.Ticker(ticker)
-        hist = stock.history(period="1mo")
+        # Get stock data using yahooquery
+        app.logger.info(f"Fetching data for ticker: {ticker_symbol}")
+        ticker = Ticker(ticker_symbol)
+        
+        # Get price data
+        end_date = datetime.now()
+        start_date = end_date - timedelta(days=30)
+        hist = ticker.history(start=start_date, end=end_date)
         
         if hist.empty:
-            return jsonify({"error": f"No data found for ticker: {ticker}"}), 404
+            app.logger.error(f"Empty history data for {ticker_symbol}")
+            return jsonify({"error": f"No data found for ticker: {ticker_symbol}"}), 404
+            
+        # Get the last row of data
+        current_price = float(hist.iloc[-1]['close'])
+        app.logger.info(f"Current price for {ticker_symbol}: {current_price}")
         
-        current_price = hist['Close'][-1]
+        # Get additional info
+        info = ticker.summary_detail[ticker_symbol]
+        quote = ticker.price[ticker_symbol]
         
-        # Get additional info if available
-        info = {}
-        try:
-            info = stock.info
-        except:
-            pass
+        app.logger.info(f"Successfully fetched info for {ticker_symbol}")
         
         # Basic data to return
         data = {
-            "ticker": ticker,
+            "ticker": ticker_symbol,
             "current_price": current_price,
-            "last_updated": hist.index[-1].strftime('%Y-%m-%d'),
+            "last_updated": hist.index[-1][1].strftime('%Y-%m-%d'),  # Index contains (symbol, date)
+            "company_name": quote.get('shortName', ''),
+            "sector": quote.get('sector', ''),
+            "market_cap": info.get('marketCap', None),
+            "pe_ratio": info.get('trailingPE', None),
+            "dividend_yield": info.get('dividendYield', 0) * 100,
+            "fifty_two_week_high": info.get('fiftyTwoWeekHigh', None),
+            "fifty_two_week_low": info.get('fiftyTwoWeekLow', None)
         }
-        
-        # Add additional data if available
-        if info:
-            additional_data = {
-                "company_name": info.get('shortName', ''),
-                "sector": info.get('sector', ''),
-                "market_cap": info.get('marketCap', None),
-                "pe_ratio": info.get('trailingPE', None),
-                "dividend_yield": info.get('dividendYield', None) * 100 if info.get('dividendYield') else None,
-                "fifty_two_week_high": info.get('fiftyTwoWeekHigh', None),
-                "fifty_two_week_low": info.get('fiftyTwoWeekLow', None)
-            }
-            data.update(additional_data)
         
         return jsonify(data)
     
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        app.logger.error(f"Error processing request for {ticker_symbol}: {str(e)}")
+        return jsonify({
+            "error": f"Error fetching data: {str(e)}",
+            "details": "If this persists, please try again in a few minutes"
+        }), 500
 
 @app.route('/api/simulate', methods=['POST'])
 def simulate_options():
     """API endpoint to perform options simulation calculations."""
     try:
         data = request.json
-        ticker = data.get('ticker', 'AAPL')
+        ticker_symbol = data.get('ticker', 'AAPL')
         options = data.get('options', [])
         expiration_days = data.get('expiration_days', 30)
         
+        app.logger.info(f"Simulating options for {ticker_symbol}")
+        
         if not options:
+            app.logger.error(f"No options provided for {ticker_symbol}")
             return jsonify({"error": "No options provided"}), 400
         
-        # Get current stock price
-        stock = yf.Ticker(ticker)
-        hist = stock.history(period="1mo")
+        # Get current stock price using yahooquery
+        ticker = Ticker(ticker_symbol)
+        current_price = float(ticker.price[ticker_symbol]['regularMarketPrice'])
         
-        if hist.empty:
-            return jsonify({"error": f"No data found for ticker: {ticker}"}), 404
-        
-        current_price = hist['Close'][-1]
+        app.logger.info(f"Current price for {ticker_symbol}: {current_price}")
         
         # Calculate results for each option
         results = []
@@ -100,13 +108,14 @@ def simulate_options():
             })
         
         return jsonify({
-            "ticker": ticker,
+            "ticker": ticker_symbol,
             "current_price": current_price,
             "expiration_days": expiration_days,
             "results": results
         })
     
     except Exception as e:
+        app.logger.error(f"Error processing request for options simulation: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
