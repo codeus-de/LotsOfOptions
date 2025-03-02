@@ -17,7 +17,7 @@ function createTab(ticker) {
     });
     tabsHeader.appendChild(tab);
     
-    // Create tab pane with a chart canvas, options list, and summary section
+    // Create tab pane with a chart canvas and summary section only
     const tabsContent = document.getElementById('tabs-content');
     const tabPane = document.createElement('div');
     tabPane.className = 'tab-pane';
@@ -27,18 +27,10 @@ function createTab(ticker) {
             <div class="chart-wrapper">
                 <canvas id="simulation-chart-${ticker}"></canvas>
             </div>
-            <div class="options-summary-container">
-                <div class="options-list-section">
-                    <h3>Added Options:</h3>
-                    <div id="options-list-${ticker}" class="options-list">
-                        <!-- Options will be added here dynamically -->
-                    </div>
-                </div>
-                <div class="summary-section">
-                    <h3 class="summary-title">Option Summary</h3>
-                    <div id="summary-grid-${ticker}" class="summary-grid">
-                        <!-- Summary cards will be added here dynamically -->
-                    </div>
+            <div class="summary-section">
+                <h3 class="summary-title">Option Summary</h3>
+                <div id="summary-grid-${ticker}" class="summary-grid">
+                    <!-- Summary cards will be added here dynamically -->
                 </div>
             </div>
         </div>
@@ -187,23 +179,9 @@ function addOption() {
     // Add option to active tab's options array
     tabsData[activeTicker].options.push({ strike, premium });
     
-    // Add to UI in the active tab's options list
-    const optionsList = document.getElementById('options-list-' + activeTicker);
-    const optionItem = document.createElement('div');
-    optionItem.className = 'option-item';
-    optionItem.innerHTML = `
-        <span class="option-info">Strike: $${strike.toFixed(2)}, Premium: $${premium.toFixed(2)}</span>
-        <button class="delete-option" data-index="${tabsData[activeTicker].options.length - 1}">
-            <i class="fas fa-trash"></i>
-        </button>
-    `;
-    optionsList.appendChild(optionItem);
-    
-    // Add delete event listener
-    optionItem.querySelector('.delete-option').addEventListener('click', function() {
-        const index = parseInt(this.getAttribute('data-index'));
-        deleteOption(index, optionItem);
-    });
+    // Instead, update the summary cards to reflect the new option
+    const expirationValue = parseInt(document.getElementById('expiration-input').value) || 30;
+    updateSummary(activeTicker, expirationValue);
     
     // Clear inputs
     strikeInput.value = '';
@@ -219,38 +197,27 @@ function addOption() {
 }
 
 // Update deleteOption to use active tab's options
-function deleteOption(index, element) {
+function deleteOption(index) {
     tabsData[activeTicker].options.splice(index, 1);
-    element.remove();
-    // Reindex delete buttons
-    const deleteButtons = document.querySelectorAll('.delete-option');
-    deleteButtons.forEach((button, i) => {
-        button.setAttribute('data-index', i);
-    });
-    
-    if (tabsData[activeTicker].options.length > 0 && tabsData[activeTicker].currentPrice > 0) {
-        plotSimulation();
-    } else {
-        // Destroy chart if exists
-        if (tabsData[activeTicker].chart) {
-            tabsData[activeTicker].chart.destroy();
-            tabsData[activeTicker].chart = null;
-        }
-    }
-    
+    const expirationValue = parseInt(document.getElementById('expiration-input').value) || 30;
+    updateSummary(activeTicker, expirationValue);
     showAlert('Option removed', 'info');
 }
 
-// Update plotSimulation to use active tab's canvas and options
+// Updated plotSimulation function
 function plotSimulation() {
-    if (!tabsData[activeTicker] || tabsData[activeTicker].options.length === 0) {
-        showAlert('Please add at least one option first', 'warning');
-        return;
+    const ticker = activeTicker;
+    // Ensure any existing chart is destroyed before re-plotting
+    if (tabsData[ticker].chart) {
+        tabsData[ticker].chart.destroy();
+        tabsData[ticker].chart = null;
     }
+
+    const ctx = document.getElementById('simulation-chart-' + ticker).getContext('2d');
     const expirationDays = parseInt(document.getElementById('expiration-input').value) || 30;
     
-    let currentPrice = tabsData[activeTicker].currentPrice;
-    let optionsArray = tabsData[activeTicker].options;
+    let currentPrice = tabsData[ticker].currentPrice;
+    let optionsArray = tabsData[ticker].options;
     
     // Determine strike range from options
     let minStrike = Infinity;
@@ -272,138 +239,112 @@ function plotSimulation() {
     maxPrice = Math.max(maxPrice, currentPrice * 1.2);
     
     const prices = [];
-    const profitLossData = [];
     const step = (maxPrice - minPrice) / 100;
     for (let price = minPrice; price <= maxPrice; price += step) {
         prices.push(price);
     }
     
-    optionsArray.forEach((option, index) => {
-        const { strike, premium } = option;
-        const profitLoss = [];
-        prices.forEach(price => {
-            if (price >= strike) {
-                profitLoss.push(premium * 100);
+    // Prepare datasets for each option series
+    const datasets = optionsArray.map((option, index) => {
+        const profitLoss = prices.map(price => {
+            if (price >= option.strike) {
+                return option.premium * 100;
             } else {
-                profitLoss.push((premium + (price - strike)) * 100);
+                return (option.premium + (price - option.strike)) * 100;
             }
         });
-        profitLossData.push({
-            label: `Strike: $${strike.toFixed(2)}, Premium: $${premium.toFixed(2)}`,
-            data: profitLoss,
+
+        return {
+            label: `Strike: $${option.strike.toFixed(2)}, Premium: $${option.premium.toFixed(2)}`,
+            data: prices.map((price, i) => ({ x: price, y: profitLoss[i] })),
             borderColor: getRandomColor(index),
             backgroundColor: getRandomColor(index, 0.1),
             borderWidth: 2,
             pointRadius: 0,
-            tension: 0.1
-        });
+            tension: 0.1,
+            fill: false
+        };
     });
-    
-    // Get the canvas for the active tab
-    const ctx = document.getElementById('simulation-chart-' + activeTicker).getContext('2d');
-    
-    // Destroy previous chart if exists
-    if (tabsData[activeTicker].chart) {
-        tabsData[activeTicker].chart.destroy();
-    }
-    
-    tabsData[activeTicker].chart = new Chart(ctx, {
+
+    // Create a new chart
+    tabsData[ticker].chart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: prices.map(p => p.toFixed(2)),
-            datasets: profitLossData
+            datasets: datasets
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: `Cash-Secured Put Simulator for ${activeTicker}`,
-                    font: { size: 16 }
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.dataset.label}: $${context.raw.toFixed(2)}`;
-                        }
-                    }
-                },
-                legend: { position: 'bottom' }
-            },
             scales: {
                 x: {
-                    title: { display: true, text: 'Stock Price at Expiration ($)' },
-                    ticks: {
-                        callback: function(value, index) {
-                            if (index % 10 === 0) {
-                                return '$' + prices[index].toFixed(2);
-                            }
-                            return '';
-                        }
+                    type: 'linear',
+                    position: 'bottom',
+                    title: {
+                        display: true,
+                        text: 'Stock Price ($)'
                     }
                 },
                 y: {
-                    title: { display: true, text: 'Profit/Loss ($)' },
-                    ticks: {
-                        callback: function(value) {
-                            return '$' + value.toFixed(2);
-                        }
+                    title: {
+                        display: true,
+                        text: 'Profit / Loss ($)'
                     }
                 }
             },
-            interaction: { mode: 'nearest', axis: 'x', intersect: false },
-            annotation: {
-                annotations: {
-                    currentPrice: {
-                        type: 'line',
-                        mode: 'vertical',
-                        scaleID: 'x',
-                        value: currentPrice.toFixed(2),
-                        borderColor: 'rgba(150, 150, 150, 0.7)',
-                        borderWidth: 2,
-                        borderDash: [6, 6],
-                        label: { content: `Current: $${currentPrice.toFixed(2)}`, enabled: true, position: 'top' }
-                    },
-                    breakEven: {
-                        type: 'line',
-                        mode: 'horizontal',
-                        scaleID: 'y',
-                        value: 0,
-                        borderColor: 'rgba(0, 0, 0, 0.3)',
-                        borderWidth: 1
-                    }
+            plugins: {
+                legend: {
+                    display: true
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
                 }
             }
         }
     });
-    
-    updateSummary(activeTicker, expirationDays);
 }
 
 // Update updateSummary function to target the active tab's summary grid
 function updateSummary(ticker, expirationDays) {
     const summaryGrid = document.getElementById('summary-grid-' + ticker);
-    summaryGrid.innerHTML = '';
-    tabsData[ticker].options.forEach(option => {
+    if (!summaryGrid) return;
+    let html = '';
+    tabsData[ticker].options.forEach((option, index) => {
         const { strike, premium } = option;
         const maxProfit = premium * 100;
         const maxLoss = (strike - premium) * 100;
         const breakeven = strike - premium;
-        const summaryCard = document.createElement('div');
-        summaryCard.className = 'summary-card';
-        summaryCard.innerHTML = `
-            <h4>Option Summary</h4>
-            <p><strong>Strike Price:</strong> $${strike.toFixed(2)}</p>
-            <p><strong>Premium:</strong> $${premium.toFixed(2)}</p>
-            <p><strong>Max Profit:</strong> $${maxProfit.toFixed(2)}</p>
-            <p><strong>Max Loss:</strong> $${maxLoss.toFixed(2)}</p>
-            <p><strong>Breakeven:</strong> $${breakeven.toFixed(2)}</p>
-        `;
-        summaryGrid.appendChild(summaryCard);
+        html += `
+           <div class="summary-card" data-index="${index}">
+              <div class="summary-info">
+                <p><strong>Strike:</strong> $${strike.toFixed(2)}</p>
+                <p><strong>Premium:</strong> $${premium.toFixed(2)}</p>
+                <p><strong>Max Profit:</strong> $${maxProfit.toFixed(2)}</p>
+                <p><strong>Max Loss:</strong> $${maxLoss.toFixed(2)}</p>
+                <p><strong>Breakeven:</strong> $${breakeven.toFixed(2)}</p>
+              </div>
+              <button class="delete-series" data-index="${index}"><i class="fas fa-trash"></i></button>
+           </div>
+         `;
     });
+    summaryGrid.innerHTML = html;
+    
+    // Attach delete event listeners
+    summaryGrid.querySelectorAll('.delete-series').forEach(btn => {
+         btn.addEventListener('click', function() {
+             const idx = parseInt(this.getAttribute('data-index'));
+             deleteOption(idx);
+         });
+    });
+    
+    // Update chart simulation: if options exist, update simulation; else, destroy the chart if exists
+    if (tabsData[ticker].options.length > 0 && tabsData[ticker].currentPrice > 0) {
+         plotSimulation();
+    } else {
+         if (tabsData[ticker].chart) {
+             tabsData[ticker].chart.destroy();
+             tabsData[ticker].chart = null;
+         }
+    }
 }
 
 // Helper function to generate random colors for chart lines

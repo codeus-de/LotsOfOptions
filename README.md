@@ -52,6 +52,41 @@ A beautiful web application for simulating cash-secured put options strategies, 
 
 5. Click "Update Simulation" to view the profit/loss chart and summary information.
 
+## Deployment
+
+### Local Development
+
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Run the development server:
+```bash
+python app.py
+```
+
+3. Visit `http://localhost:5000` in your browser
+
+### Deployment on Render.com (Free)
+
+1. Create a new account on [Render.com](https://render.com)
+
+2. Click "New +" and select "Web Service"
+
+3. Connect your GitHub repository
+
+4. Fill in the following details:
+   - Name: `options-simulator` (or your preferred name)
+   - Environment: `Python 3`
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `gunicorn app:app`
+   - Plan: `Free`
+
+5. Click "Create Web Service"
+
+Your application will be deployed and available at a URL like: `https://your-app-name.onrender.com`
+
 ## Project Structure
 
 ```
