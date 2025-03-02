@@ -133,13 +133,39 @@ function plotSimulation() {
         return;
     }
     
-    // Generate price range for x-axis (±20% of current price)
+    // Find the minimum and maximum strike prices to adjust the display range
+    let minStrike = Infinity;
+    let maxStrike = -Infinity;
+    
+    options.forEach(option => {
+        minStrike = Math.min(minStrike, option.strike);
+        maxStrike = Math.max(maxStrike, option.strike);
+    });
+    
+    // Add padding to ensure we show a good range around all strike prices
+    const strikePadding = 0.2; // 20% padding
+    const strikeRange = maxStrike - minStrike;
+    
+    // If we only have one option or all options have the same strike, use current price as reference
+    if (strikeRange === 0) {
+        minStrike = Math.min(minStrike, currentPrice);
+        maxStrike = Math.max(maxStrike, currentPrice);
+    }
+    
+    // Calculate display range with padding
+    const paddedRange = strikeRange === 0 ? maxStrike * strikePadding : strikeRange * (1 + strikePadding);
+    let minPrice = Math.max(minStrike - paddedRange * 0.5, 0); // Ensure we don't go below 0
+    let maxPrice = maxStrike + paddedRange * 0.5;
+    
+    // Ensure current price is within the range
+    minPrice = Math.min(minPrice, currentPrice * 0.8);
+    maxPrice = Math.max(maxPrice, currentPrice * 1.2);
+    
+    // Generate price range for x-axis
     const prices = [];
     const profitLossData = [];
     
     // Create price range
-    const minPrice = currentPrice * 0.8;
-    const maxPrice = currentPrice * 1.2;
     const step = (maxPrice - minPrice) / 100;
     
     for (let price = minPrice; price <= maxPrice; price += step) {
