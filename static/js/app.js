@@ -11,10 +11,29 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('add-option-btn').addEventListener('click', addOption);
     document.getElementById('plot-btn').addEventListener('click', plotSimulation);
     document.getElementById('ticker-input').addEventListener('change', fetchStockData);
+    document.getElementById('ticker-input').addEventListener('change', updateYahooLink);
     
     // Initial stock data fetch for default ticker
     fetchStockData();
+    
+    // Initialize Yahoo Finance link
+    updateYahooLink();
 });
+
+// Update Yahoo Finance options link
+function updateYahooLink() {
+    const ticker = document.getElementById('ticker-input').value.toUpperCase();
+    const yahooLink = document.getElementById('yahoo-options-link');
+    
+    if (ticker) {
+        // Use German Yahoo Finance for .de domain
+        yahooLink.href = `https://de.finance.yahoo.com/quote/${ticker}/options/?type=puts`;
+        yahooLink.style.display = 'inline-flex';
+    } else {
+        yahooLink.href = '#';
+        yahooLink.style.display = 'none';
+    }
+}
 
 // Fetch stock data from the server
 async function fetchStockData() {

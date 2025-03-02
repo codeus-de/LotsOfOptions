@@ -222,6 +222,26 @@ nav a:hover::after {
   box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
 }
 
+.yahoo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition);
+  padding: 8px 0;
+}
+
+.yahoo-link:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+.yahoo-link i {
+  font-size: 14px;
+}
+
 .options-list {
   max-height: 200px;
   overflow-y: auto;
