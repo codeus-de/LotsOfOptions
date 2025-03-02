@@ -151,6 +151,11 @@ nav a:hover::after {
   color: var(--primary-color);
 }
 
+.btn-small {
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
 .main {
   padding: 60px 0;
 }
@@ -188,13 +193,82 @@ nav a:hover::after {
   box-shadow: var(--card-shadow);
 }
 
-.chart-section {
+.chart-container {
   flex: 2;
   min-width: 500px;
   background-color: var(--white);
   border-radius: 8px;
   padding: 25px;
   box-shadow: var(--card-shadow);
+}
+
+.tabs-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.tabs-header {
+  display: flex;
+  border-bottom: 1px solid var(--medium-gray);
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: var(--transition);
+}
+
+.tab:hover {
+  color: var(--primary-color);
+}
+
+.tab.active {
+  color: var(--primary-color);
+  border-bottom-color: var(--primary-color);
+}
+
+.tab-close {
+  margin-left: 8px;
+  color: var(--dark-gray);
+  font-size: 14px;
+}
+
+.tab-close:hover {
+  color: var(--accent-color);
+}
+
+.tabs-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.tab-pane {
+  display: none;
+  height: 100%;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+.ticker-input-container {
+  display: flex;
+  gap: 10px;
+}
+
+.ticker-input-container input {
+  flex: 1;
+}
+
+.chart-wrapper {
+  height: 400px;
+  width: 100%;
 }
 
 .form-group {

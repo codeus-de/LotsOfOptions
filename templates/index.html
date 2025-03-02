@@ -65,7 +65,10 @@
                 <div class="input-section">
                     <div class="form-group">
                         <label for="ticker-input">Ticker Symbol:</label>
-                        <input type="text" id="ticker-input" placeholder="e.g. AAPL" value="AAPL">
+                        <div class="ticker-input-container">
+                            <input type="text" id="ticker-input" placeholder="e.g. AAPL" value="AAPL">
+                            <button id="add-ticker-btn" class="btn btn-small">Add Ticker</button>
+                        </div>
                     </div>
                     
                     <div id="current-price-container" class="form-group">
@@ -97,24 +100,18 @@
                         <button id="add-option-btn" class="btn">Add Option</button>
                         <button id="plot-btn" class="btn">Update Simulation</button>
                     </div>
-                    
-                    <h3 style="margin-top: 20px;">Added Options:</h3>
-                    <div id="options-list" class="options-list">
-                        <!-- Options will be added here dynamically -->
-                    </div>
                 </div>
                 
-                <!-- Chart Section -->
-                <div class="chart-section">
-                    <canvas id="simulation-chart" height="400"></canvas>
-                </div>
-            </div>
-            
-            <!-- Summary Section -->
-            <div class="summary-section">
-                <h3 class="summary-title">Option Summary</h3>
-                <div id="summary-grid" class="summary-grid">
-                    <!-- Summary cards will be added here dynamically -->
+                <!-- Tabs and Chart Section -->
+                <div class="chart-container">
+                    <div class="tabs-container">
+                        <div class="tabs-header" id="tabs-header">
+                            <!-- Tabs will be added here dynamically -->
+                        </div>
+                        <div class="tabs-content" id="tabs-content">
+                            <!-- Tab content will be added here dynamically -->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
