@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Options Simulator | Advanced Trading Tools</title>
+    
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <div class="logo">
+                <i class="fas fa-chart-line"></i>
+                <h1>Options Simulator</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#simulator">Simulator</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#about">About</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h2>Advanced Options Trading Simulator</h2>
+            <p>Visualize potential profits and losses from cash-secured put options before you trade. Make informed decisions with our powerful simulation tools.</p>
+            <a href="#simulator" class="btn">Start Simulating</a>
+            <a href="#features" class="btn btn-outline">Learn More</a>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="main" id="simulator">
+        <div class="container">
+            <div class="section-title">
+                <h2>Cash-Secured Put Simulator</h2>
+                <p>Add multiple options to compare different strategies and visualize potential outcomes at expiration.</p>
+            </div>
+            
+            <!-- Alert Container -->
+            <div id="alert-container"></div>
+            
+            <div class="simulator-container">
+                <!-- Input Section -->
+                <div class="input-section">
+                    <div class="form-group">
+                        <label for="ticker-input">Ticker Symbol:</label>
+                        <input type="text" id="ticker-input" placeholder="e.g. AAPL" value="AAPL">
+                    </div>
+                    
+                    <div id="current-price-container" class="form-group">
+                        <div class="spinner"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="strike-input">Strike Price ($):</label>
+                        <input type="number" id="strike-input" placeholder="e.g. 200">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="premium-input">Premium per Share ($):</label>
+                        <input type="number" id="premium-input" placeholder="e.g. 5" step="0.01">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="expiration-input">Days to Expiration:</label>
+                        <input type="number" id="expiration-input" placeholder="e.g. 30" value="30">
+                    </div>
+                    
+                    <div class="button-group">
+                        <button id="add-option-btn" class="btn">Add Option</button>
+                        <button id="plot-btn" class="btn">Update Simulation</button>
+                    </div>
+                    
+                    <h3 style="margin-top: 20px;">Added Options:</h3>
+                    <div id="options-list" class="options-list">
+                        <!-- Options will be added here dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Chart Section -->
+                <div class="chart-section">
+                    <canvas id="simulation-chart" height="400"></canvas>
+                </div>
+            </div>
+            
+            <!-- Summary Section -->
+            <div class="summary-section">
+                <h3 class="summary-title">Option Summary</h3>
+                <div id="summary-grid" class="summary-grid">
+                    <!-- Summary cards will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>Key Features</h2>
+                <p>Our options simulator provides powerful tools to help you make better trading decisions.</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h3 class="feature-title">Visual Profit/Loss Analysis</h3>
+                    <p>See exactly how your option strategy will perform across different price points at expiration.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h3 class="feature-title">Multi-Option Comparison</h3>
+                    <p>Add multiple options to compare different strikes and premiums side by side.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-calculator"></i>
+                    </div>
+                    <h3 class="feature-title">Detailed Metrics</h3>
+                    <p>Get key metrics like max profit, max loss, and break-even points for each option.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-sync-alt"></i>
+                    </div>
+                    <h3 class="feature-title">Real-Time Data</h3>
+                    <p>Uses current market prices to provide accurate and up-to-date simulations.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3 class="feature-title">Risk Assessment</h3>
+                    <p>Clearly visualize your potential downside to make informed risk management decisions.</p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h3 class="feature-title">Educational Tool</h3>
+                    <p>Perfect for learning how options behave without risking real money in the market.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="main" id="about">
+        <div class="container">
+            <div class="section-title">
+                <h2>About Options Simulator</h2>
+                <p>Learn more about our mission to make options trading more accessible and understandable.</p>
+            </div>
+            
+            <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: var(--card-shadow);">
+                <h3 style="color: var(--primary-color); margin-bottom: 20px;">What are Cash-Secured Puts?</h3>
+                <p>A cash-secured put is an options strategy where you sell a put option and set aside enough cash to buy the stock if the option is assigned. This strategy is used when you're bullish or neutral on a stock and wouldn't mind owning it at a lower price.</p>
+                
+                <h3 style="color: var(--primary-color); margin: 20px 0;">How Our Simulator Helps</h3>
+                <p>Our simulator allows you to visualize the potential outcomes of your cash-secured put strategy at expiration. You can see your maximum profit (the premium received), maximum loss (if the stock price falls to zero), and break-even point.</p>
+                
+                <h3 style="color: var(--primary-color); margin: 20px 0;">Who Should Use This Tool</h3>
+                <p>This simulator is perfect for:</p>
+                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                    <li>Options traders looking to visualize risk/reward</li>
+                    <li>Investors considering selling puts on stocks they want to own</li>
+                    <li>Trading educators and students learning about options strategies</li>
+                    <li>Risk managers assessing potential outcomes</li>
+                </ul>
+                
+                <p><strong>Disclaimer:</strong> This tool is for educational purposes only. Always consult with a financial advisor before making investment decisions. Past performance is not indicative of future results.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="main" id="contact" style="background-color: var(--light-gray);">
+        <div class="container">
+            <div class="section-title">
+                <h2>Contact Us</h2>
+                <p>Have questions or feedback? We'd love to hear from you!</p>
+            </div>
+            
+            <div style="background-color: white; padding: 30px; border-radius: 8px; box-shadow: var(--card-shadow); max-width: 600px; margin: 0 auto;">
+                <div class="form-group">
+                    <label for="contact-name">Name:</label>
+                    <input type="text" id="contact-name" placeholder="Your Name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact-email">Email:</label>
+                    <input type="email" id="contact-email" placeholder="your.email@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="contact-message">Message:</label>
+                    <textarea id="contact-message" rows="5" style="width: 100%; padding: 12px; border: 1px solid var(--medium-gray); border-radius: 4px; font-family: inherit; resize: vertical;" placeholder="Your message here..."></textarea>
+                </div>
+                
+                <button class="btn" style="width: 100%;">Send Message</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>Options Simulator</h3>
+                    <p>Advanced tools for options traders to visualize and analyze potential trading strategies.</p>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="#simulator">Simulator</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#about">About</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="#">Options Trading Guide</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">API Documentation</a></li>
+                        <li><a href="#">Terms of Service</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Connect With Us</h3>
+                    <ul>
+                        <li><a href="#"><i class="fab fa-twitter"></i> Twitter</a></li>
+                        <li><a href="#"><i class="fab fa-linkedin"></i> LinkedIn</a></li>
+                        <li><a href="#"><i class="fab fa-github"></i> GitHub</a></li>
+                        <li><a href="#"><i class="fab fa-discord"></i> Discord</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                <p>&copy; 2025 Options Simulator. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
